@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Carris Driver Routes</title>
+  <title>Rotas GPX</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +23,7 @@
       opacity: 1;
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-Dbh_Keg9.js"></script>
+  <script type="module" crossorigin src="./assets/index-BcwB4m-h.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-s1unOxJQ.css">
 </head>
 
@@ -31,8 +31,8 @@
   <div id="app">
     <header class="app-header">
       <div class="logo">
-        <span class="logo-yellow">Carris</span>
-        <span class="logo-text">Metropolitana</span>
+        <span class="logo-yellow">Rotas</span>
+        <span class="logo-text">GPX</span>
         <span class="badge">Driver</span>
       </div>
       <div class="current-time" id="clock">--:--</div>
@@ -43,33 +43,33 @@
         <div class="search-container">
           <div class="input-group">
             <i class="ph ph-magnifying-glass"></i>
-            <input type="text" id="line-search" placeholder="Search line (e.g., 1726)" />
+            <input type="text" id="line-search" placeholder="Pesquisar linha (ex: 1726)" />
           </div>
         </div>
 
         <div class="filter-container">
-          <label for="date-picker">Date & Time</label>
+          <label for="date-picker">Data</label>
           <div class="datetime-inputs">
             <input type="date" id="date-picker" />
           </div>
-          <small class="hint">Select time availability.</small>
+          <small class="hint">Selecione a data para ver horários.</small>
         </div>
 
         <div class="results-list" id="results-list">
           <!-- Line items will be injected here -->
           <div class="empty-state">
             <i class="ph ph-bus"></i>
-            <p>Search for a line to view routes</p>
+            <p>Pesquise uma linha para ver rotas</p>
           </div>
         </div>
 
         <div class="download-section" id="download-section" style="display: none;">
           <div class="checkbox-wrapper" style="margin-bottom: 10px;">
             <input type="checkbox" id="gpx-include-stops" />
-            <label for="gpx-include-stops">Include Stops</label>
+            <label for="gpx-include-stops">Incluir Paragens</label>
           </div>
           <button id="btn-download-gpx" class="btn-primary">
-            <i class="ph ph-download-simple"></i> Download GPX
+            <i class="ph ph-download-simple"></i> Baixar GPX
           </button>
         </div>
       </aside>
