@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carris Driver Routes</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* Quick splash preventer */
+    body {
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    body.loaded {
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body class="loaded">
+  <div id="app">
+    <header class="app-header">
+      <div class="logo">
+        <span class="logo-yellow">Carris</span>
+        <span class="logo-text">Metropolitana</span>
+        <span class="badge">Driver</span>
+      </div>
+      <div class="current-time" id="clock">--:--</div>
+    </header>
+
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="search-container">
+          <div class="input-group">
+            <i class="ph ph-magnifying-glass"></i>
+            <input type="text" id="line-search" placeholder="Search line (e.g., 1726)" />
+          </div>
+        </div>
+
+        <div class="filter-container">
+          <label for="date-picker">Date & Time</label>
+          <div class="datetime-inputs">
+            <input type="date" id="date-picker" />
+          </div>
+          <small class="hint">Select time availability.</small>
+        </div>
+
+        <div class="results-list" id="results-list">
+          <!-- Line items will be injected here -->
+          <div class="empty-state">
+            <i class="ph ph-bus"></i>
+            <p>Search for a line to view routes</p>
+          </div>
+        </div>
+
+        <div class="download-section" id="download-section" style="display: none;">
+          <div class="checkbox-wrapper" style="margin-bottom: 10px;">
+            <input type="checkbox" id="gpx-include-stops" />
+            <label for="gpx-include-stops">Include Stops</label>
+          </div>
+          <button id="btn-download-gpx" class="btn-primary">
+            <i class="ph ph-download-simple"></i> Download GPX
+          </button>
+        </div>
+      </aside>
+
+      <main class="map-container">
+        <div id="map"></div>
+      </main>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
