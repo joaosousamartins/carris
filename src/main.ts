@@ -1,7 +1,7 @@
 import './style.css';
 import { fetchLines, fetchPatterns, fetchShape } from './api';
 import type { Line, Pattern, Shape } from './api';
-import { initMap, drawShape, clearMap } from './map';
+import { initMap, drawShape, clearMap, resizeMap } from './map';
 import { downloadGPX } from './gpx';
 
 interface TripData {
@@ -79,6 +79,11 @@ function init() {
 
   // Handle browser back/forward
   window.addEventListener('popstate', handleStartup);
+
+  // Fix map size on resize (keyboard open/close, rotation)
+  window.addEventListener('resize', () => {
+    resizeMap();
+  });
 }
 
 async function handleStartup() {
@@ -155,7 +160,7 @@ function updateURL(lineId?: string, patternId?: string) {
 }
 
 async function loadLines(): Promise<Line[]> {
-  resultsList.innerHTML = '<div class="empty-state">Loading lines...</div>';
+  resultsList.innerHTML = '<div class="empty-state">A carregar linhas...</div>';
   state.lines = await fetchLines();
   renderLines(state.lines);
   return state.lines;
@@ -165,7 +170,7 @@ function renderLines(lines: Line[]) {
   resultsList.innerHTML = '';
 
   if (lines.length === 0) {
-    resultsList.innerHTML = '<div class="empty-state"><p>No lines found</p></div>';
+    resultsList.innerHTML = '<div class="empty-state"><p>Nenhuma linha encontrada</p></div>';
     return;
   }
 
@@ -194,7 +199,7 @@ async function selectLine(line: Line, updateUrl: boolean = true) {
   downloadSection.style.display = 'none';
   clearMap();
 
-  resultsList.innerHTML = '<div class="empty-state">Loading schedules...</div>';
+  resultsList.innerHTML = '<div class="empty-state">A carregar horários...</div>';
   state.patterns = await fetchPatterns(line.patterns);
 
   if (updateUrl) updateURL(line.short_name);
@@ -209,7 +214,7 @@ function renderSchedules() {
   backBtn.className = 'line-card';
   backBtn.style.textAlign = 'center';
   backBtn.style.fontWeight = 'bold';
-  backBtn.innerHTML = '<i class="ph ph-arrow-left"></i> Back to Lines';
+  backBtn.innerHTML = '<i class="ph ph-arrow-left"></i> Voltar às Linhas';
   backBtn.addEventListener('click', () => {
     state.selectedLine = null;
     loadLines();
@@ -335,7 +340,7 @@ function renderSchedules() {
   if (allTrips.length === 0) {
     const msg = document.createElement('div');
     msg.className = 'empty-state';
-    msg.innerHTML = `<p>No schedules found for this direction on ${state.date}</p>`;
+    msg.innerHTML = `<p>Sem horários para esta direção em ${state.date}</p>`;
     resultsList.appendChild(msg);
     return;
   }
@@ -362,7 +367,7 @@ function renderSchedules() {
         <span class="line-name">${headsign}</span>
       </div>
       <div class="line-route">
-        <small>Variation: ${item.pattern.id}</small>
+        <small>Variação: ${item.pattern.id}</small>
       </div>
     `;
     el.addEventListener('click', () => selectTrip(item, el));
@@ -388,7 +393,7 @@ async function selectTrip(data: TripData, element: HTMLElement | null, updateUrl
   const shape = await fetchShape(data.pattern.shape_id);
   if (shape) {
     state.selectedShape = shape;
-    drawShape(shape.geojson, state.selectedLine?.color || '#E30613', state.selectedPattern?.path);
+    drawShape(shape.geojson, state.selectedLine?.color || '#FFEB00', state.selectedPattern?.path);
     downloadSection.style.display = 'block';
   } else {
     console.error('Shape not found for pattern', data.pattern.id);

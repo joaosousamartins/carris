@@ -8,6 +8,11 @@ export function initMap(elementId: string) {
     // Center on Lisbon Area roughly
     map = L.map(elementId).setView([38.7223, -9.1393], 11);
 
+    // Force map invalidation to fix tile loading issues on mobile/resize
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 100);
+
     // CartoDB Voyager (clean, premium look)
     const voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -26,8 +31,8 @@ export function initMap(elementId: string) {
 
     // Layer Control
     const baseMaps = {
-        "Street": voyager,
-        "Satellite": satellite
+        "Rua": voyager,
+        "Satélite": satellite
     };
 
     L.control.layers(baseMaps).addTo(map);
@@ -44,7 +49,7 @@ export function initMap(elementId: string) {
     });
 }
 
-export function drawShape(geojson: any, color: string = '#E30613', stops: any[] = []) {
+export function drawShape(geojson: any, color: string = '#FFEB00', stops: any[] = []) {
     routeLayer.clearLayers();
 
     // Leaflet's L.geoJSON handles GeoJSON naturally
@@ -117,4 +122,10 @@ export function drawShape(geojson: any, color: string = '#E30613', stops: any[] 
 
 export function clearMap() {
     routeLayer.clearLayers();
+}
+
+export function resizeMap() {
+    if (map) {
+        map.invalidateSize();
+    }
 }
