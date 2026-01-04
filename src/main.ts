@@ -28,15 +28,13 @@ const searchInput = document.getElementById('line-search') as HTMLInputElement;
 const resultsList = document.getElementById('results-list') as HTMLDivElement;
 const downloadSection = document.getElementById('download-section') as HTMLDivElement;
 const btnDownload = document.getElementById('btn-download-gpx') as HTMLButtonElement;
-const datePicker = document.getElementById('date-picker') as HTMLInputElement;
-const dateSection = document.getElementById('date-filter-section') as HTMLDivElement;
 const clockEl = document.getElementById('clock') as HTMLDivElement;
 
 function init() {
   initMap('map');
 
   // Set initial date/time
-  datePicker.value = state.date;
+  // datePicker.value = state.date;
   // timePicker.value = state.time;
 
   // Clock ticker
@@ -67,10 +65,12 @@ function init() {
   });
 
   // Update state on inputs
+  /*
   datePicker.addEventListener('change', (e) => {
     state.date = (e.target as HTMLInputElement).value;
     updateScheduleView();
   });
+  */
 
   /*
   timePicker.addEventListener('change', (e) => {
@@ -142,7 +142,6 @@ async function handleStartup() {
         loadLines();
         clearMap();
         downloadSection.style.display = 'none';
-        dateSection.style.display = 'none';
       }
     }
   }
@@ -209,7 +208,6 @@ async function selectLine(line: Line, updateUrl: boolean = true) {
   state.selectedShape = null;
   state.direction = 0; // Reset to default direction
   downloadSection.style.display = 'none';
-  dateSection.style.display = (state.viewMode === 'schedule' ? 'block' : 'none');
   clearMap();
 
   resultsList.innerHTML = '<div class="empty-state">A carregar horários...</div>';
@@ -233,7 +231,6 @@ function renderSchedules() {
     loadLines();
     clearMap();
     downloadSection.style.display = 'none';
-    dateSection.style.display = 'none';
     updateURL(); // clear URL
   });
   resultsList.appendChild(backBtn);
@@ -363,18 +360,34 @@ function renderSchedules() {
 
   btnSchedule.addEventListener('click', () => {
     state.viewMode = 'schedule';
-    dateSection.style.display = 'block';
     renderSchedules();
   });
   btnPattern.addEventListener('click', () => {
     state.viewMode = 'pattern';
-    dateSection.style.display = 'none';
     renderSchedules();
   });
 
   modeContainer.appendChild(btnSchedule);
   modeContainer.appendChild(btnPattern);
   resultsList.appendChild(modeContainer);
+
+  if (state.viewMode === 'schedule') {
+    const datePickerContainer = document.createElement('div');
+    datePickerContainer.className = 'filter-container';
+    datePickerContainer.style.padding = '10px 20px';
+    datePickerContainer.style.background = '#f9f9f9';
+    datePickerContainer.style.borderBottom = '1px solid #eee';
+    datePickerContainer.innerHTML = `
+      <label style="display: block; font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; margin-bottom: 4px;">Data de Consulta</label>
+      <input type="date" value="${state.date}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 14px; outline: none;" />
+    `;
+    const dynamicDatePicker = datePickerContainer.querySelector('input') as HTMLInputElement;
+    dynamicDatePicker.addEventListener('change', (e) => {
+      state.date = (e.target as HTMLInputElement).value;
+      renderSchedules();
+    });
+    resultsList.appendChild(datePickerContainer);
+  }
 
   if (state.viewMode === 'pattern') {
     renderPatterns();
@@ -554,11 +567,6 @@ function renderPatterns() {
   });
 }
 
-function updateScheduleView() {
-  if (state.selectedLine) {
-    renderSchedules();
-  }
-}
 
 // Bootstrap
 if (document.readyState === 'loading') {
