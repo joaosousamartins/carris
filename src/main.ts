@@ -58,8 +58,10 @@ function init() {
   btnDownload.addEventListener('click', () => {
     if (state.selectedPattern && state.selectedShape) {
       const includeStops = (document.getElementById('gpx-include-stops') as HTMLInputElement).checked;
-      // User request: Line Number + Variation (Pattern ID)
-      const filename = `${state.selectedLine?.short_name}_${state.selectedPattern.id}.gpx`;
+      // Use destination name (last stop) in filename for better identification
+      const lastStopName = state.selectedPattern.path[state.selectedPattern.path.length - 1]?.stop.name || 'Rota';
+      const sanitizedName = lastStopName.replace(/[\\/:*?"<>|]/g, '_');
+      const filename = `${sanitizedName}_${state.selectedPattern.id}.gpx`;
       downloadGPX(state.selectedPattern, state.selectedShape, filename, includeStops);
     }
   });
