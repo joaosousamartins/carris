@@ -29,7 +29,7 @@ const resultsList = document.getElementById('results-list') as HTMLDivElement;
 const downloadSection = document.getElementById('download-section') as HTMLDivElement;
 const btnDownload = document.getElementById('btn-download-gpx') as HTMLButtonElement;
 const datePicker = document.getElementById('date-picker') as HTMLInputElement;
-// const timePicker = document.getElementById('time-picker') as HTMLInputElement;
+const dateSection = document.getElementById('date-filter-section') as HTMLDivElement;
 const clockEl = document.getElementById('clock') as HTMLDivElement;
 
 function init() {
@@ -142,6 +142,7 @@ async function handleStartup() {
         loadLines();
         clearMap();
         downloadSection.style.display = 'none';
+        dateSection.style.display = 'none';
       }
     }
   }
@@ -208,6 +209,7 @@ async function selectLine(line: Line, updateUrl: boolean = true) {
   state.selectedShape = null;
   state.direction = 0; // Reset to default direction
   downloadSection.style.display = 'none';
+  dateSection.style.display = (state.viewMode === 'schedule' ? 'block' : 'none');
   clearMap();
 
   resultsList.innerHTML = '<div class="empty-state">A carregar horários...</div>';
@@ -231,6 +233,7 @@ function renderSchedules() {
     loadLines();
     clearMap();
     downloadSection.style.display = 'none';
+    dateSection.style.display = 'none';
     updateURL(); // clear URL
   });
   resultsList.appendChild(backBtn);
@@ -358,8 +361,16 @@ function renderSchedules() {
   btnPattern.style.boxShadow = state.viewMode === 'pattern' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none';
   btnPattern.style.color = state.viewMode === 'pattern' ? '#000' : '#666';
 
-  btnSchedule.addEventListener('click', () => { state.viewMode = 'schedule'; renderSchedules(); });
-  btnPattern.addEventListener('click', () => { state.viewMode = 'pattern'; renderSchedules(); });
+  btnSchedule.addEventListener('click', () => {
+    state.viewMode = 'schedule';
+    dateSection.style.display = 'block';
+    renderSchedules();
+  });
+  btnPattern.addEventListener('click', () => {
+    state.viewMode = 'pattern';
+    dateSection.style.display = 'none';
+    renderSchedules();
+  });
 
   modeContainer.appendChild(btnSchedule);
   modeContainer.appendChild(btnPattern);
