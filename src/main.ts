@@ -19,7 +19,8 @@ const state = {
   patterns: [] as Pattern[],
   date: new Date().toISOString().split('T')[0],
   time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-  direction: 0 // 0: Ida, 1: Volta
+  direction: 0, // 0: Ida, 1: Volta
+  viewMode: 'pattern' as 'schedule' | 'pattern'
 };
 
 // DOM Elements
@@ -157,6 +158,16 @@ function updateURL(lineId?: string, patternId?: string) {
 
   const newUrl = `${window.location.pathname}?${params.toString()}`;
   window.history.pushState({ path: newUrl }, '', newUrl);
+}
+
+function findClosestDate(targetDate: string, availableDates: string[]): string {
+  if (availableDates.length === 0) return targetDate;
+  // availableDates is sorted YYYYMMDD
+  const pastOrEqualDates = availableDates.filter(d => d <= targetDate);
+  if (pastOrEqualDates.length > 0) {
+    return pastOrEqualDates[pastOrEqualDates.length - 1]; // Latest past date
+  }
+  return availableDates[0]; // Earliest future date
 }
 
 async function loadLines(): Promise<Line[]> {
@@ -312,30 +323,109 @@ function renderSchedules() {
     resultsList.appendChild(dirContainer);
   }
 
+  // Mode Selector (Schedule vs Pattern)
+  const modeContainer = document.createElement('div');
+  modeContainer.style.display = 'flex';
+  modeContainer.style.margin = '0 20px 10px 20px';
+  modeContainer.style.background = '#f0f0f0';
+  modeContainer.style.borderRadius = '8px';
+  modeContainer.style.padding = '4px';
+  modeContainer.style.gap = '4px';
+
+  const btnSchedule = document.createElement('button');
+  btnSchedule.innerHTML = '<i class="ph ph-clock"></i> Horário';
+  btnSchedule.style.flex = '1';
+  btnSchedule.style.padding = '6px';
+  btnSchedule.style.border = 'none';
+  btnSchedule.style.borderRadius = '6px';
+  btnSchedule.style.cursor = 'pointer';
+  btnSchedule.style.fontSize = '13px';
+  btnSchedule.style.fontWeight = '600';
+  btnSchedule.style.background = state.viewMode === 'schedule' ? '#fff' : 'transparent';
+  btnSchedule.style.boxShadow = state.viewMode === 'schedule' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none';
+  btnSchedule.style.color = state.viewMode === 'schedule' ? '#000' : '#666';
+
+  const btnPattern = document.createElement('button');
+  btnPattern.innerHTML = '<i class="ph ph-git-branch"></i> Variante';
+  btnPattern.style.flex = '1';
+  btnPattern.style.padding = '6px';
+  btnPattern.style.border = 'none';
+  btnPattern.style.borderRadius = '6px';
+  btnPattern.style.cursor = 'pointer';
+  btnPattern.style.fontSize = '13px';
+  btnPattern.style.fontWeight = '600';
+  btnPattern.style.background = state.viewMode === 'pattern' ? '#fff' : 'transparent';
+  btnPattern.style.boxShadow = state.viewMode === 'pattern' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none';
+  btnPattern.style.color = state.viewMode === 'pattern' ? '#000' : '#666';
+
+  btnSchedule.addEventListener('click', () => { state.viewMode = 'schedule'; renderSchedules(); });
+  btnPattern.addEventListener('click', () => { state.viewMode = 'pattern'; renderSchedules(); });
+
+  modeContainer.appendChild(btnSchedule);
+  modeContainer.appendChild(btnPattern);
+  resultsList.appendChild(modeContainer);
+
+  if (state.viewMode === 'pattern') {
+    renderPatterns();
+    return;
+  }
+
   const dateStr = state.date.replace(/-/g, '');
 
-  // Flatten all trips filtered by direction
-  const allTrips: TripData[] = [];
-
-  state.patterns.forEach(pattern => {
-    // Filter by direction
-    if (pattern.direction !== state.direction) return;
-
-    pattern.trips.forEach(trip => {
-      if (trip.dates.includes(dateStr)) {
-        // Find first stop time for sorting
-        // Assuming schedule is sorted by sequence, but safeguards are good
-        const firstStop = trip.schedule[0]; // simplistic
-        if (firstStop) {
-          allTrips.push({
-            trip,
-            pattern,
-            startTime: firstStop.arrival_time
-          });
+  const availableDates = new Set<string>();
+  const getTripsForDate = (targetDate: string) => {
+    const trips: TripData[] = [];
+    state.patterns.forEach(pattern => {
+      if (pattern.direction !== state.direction) return;
+      pattern.trips.forEach(trip => {
+        if (trip.dates.includes(targetDate)) {
+          const firstStop = trip.schedule[0];
+          if (firstStop) {
+            trips.push({
+              trip,
+              pattern,
+              startTime: firstStop.arrival_time
+            });
+          }
         }
-      }
+        // Collect all dates for fallback
+        if (pattern.direction === state.direction) {
+          trip.dates.forEach(d => availableDates.add(d));
+        }
+      });
     });
-  });
+    return trips;
+  };
+
+  let allTrips = getTripsForDate(dateStr);
+  let isFallback = false;
+  let fallbackDateDisplay = '';
+
+  if (allTrips.length === 0 && availableDates.size > 0) {
+    const sortedDates = Array.from(availableDates).sort();
+    const fallbackDateStr = findClosestDate(dateStr, sortedDates);
+    if (fallbackDateStr !== dateStr) {
+      allTrips = getTripsForDate(fallbackDateStr);
+      isFallback = true;
+      fallbackDateDisplay = `${fallbackDateStr.substring(0, 4)}-${fallbackDateStr.substring(4, 6)}-${fallbackDateStr.substring(6, 8)}`;
+    }
+  }
+
+  if (isFallback) {
+    const warning = document.createElement('div');
+    warning.style.margin = '0 20px 10px 20px';
+    warning.style.padding = '12px';
+    warning.style.background = '#fff3cd';
+    warning.style.color = '#856404';
+    warning.style.border = '1px solid #ffeeba';
+    warning.style.borderRadius = '8px';
+    warning.style.fontSize = '13px';
+    warning.style.display = 'flex';
+    warning.style.alignItems = 'center';
+    warning.style.gap = '8px';
+    warning.innerHTML = `<i class="ph ph-warning-circle" style="font-size: 18px"></i> <div>Horários de <strong>${fallbackDateDisplay}</strong> (dados para ${state.date} indisponíveis)</div>`;
+    resultsList.appendChild(warning);
+  }
 
   if (allTrips.length === 0) {
     const msg = document.createElement('div');
@@ -400,6 +490,57 @@ async function selectTrip(data: TripData, element: HTMLElement | null, updateUrl
     // Maybe clear map?
     clearMap();
   }
+}
+
+function renderPatterns() {
+  const dirPatterns = state.patterns.filter(p => p.direction === state.direction);
+
+  if (dirPatterns.length === 0) {
+    const msg = document.createElement('div');
+    msg.className = 'empty-state';
+    msg.innerHTML = `<p>Sem variantes para esta direção</p>`;
+    resultsList.appendChild(msg);
+    return;
+  }
+
+  dirPatterns.forEach(pattern => {
+    const el = document.createElement('div');
+    el.className = 'line-card';
+    if (state.selectedPattern && state.selectedPattern.id === pattern.id) {
+      el.classList.add('active');
+    }
+
+    const headsign = pattern.short_name || (state.direction === 0 ? 'Ida' : 'Volta');
+
+    el.innerHTML = `
+      <div class="line-header">
+        <span class="line-name">${headsign}</span>
+      </div>
+      <div class="line-route">
+        <small>ID: ${pattern.id}</small>
+      </div>
+    `;
+    el.addEventListener('click', async () => {
+      // Create a dummy TripData for compatibility with selectTrip or just handle here
+      state.selectedPattern = pattern;
+      state.selectedTrip = null;
+
+      document.querySelectorAll('.line-card').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+
+      updateURL(state.selectedLine?.short_name, pattern.id);
+
+      const shape = await fetchShape(pattern.shape_id);
+      if (shape) {
+        state.selectedShape = shape;
+        drawShape(shape.geojson, state.selectedLine?.color || '#FFEB00', pattern.path);
+        downloadSection.style.display = 'block';
+      } else {
+        clearMap();
+      }
+    });
+    resultsList.appendChild(el);
+  });
 }
 
 function updateScheduleView() {
